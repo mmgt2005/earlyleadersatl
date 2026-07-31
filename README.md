@@ -73,11 +73,85 @@ send an email via Resend to `earlyleaderatl@gmail.com`.
   a custom domain in Resend and update `FROM_EMAIL` in `api/_lib/resend.ts` to send
   from `@earlyleadersatl.org` (or similar) and deliver to any recipient.
 
+## RSVP sheet updates (Apps Script)
+
+Submitting an RSVP also increments that event's `Registered` count in the sheet, via
+the same Apps Script project used for the Cover Images sync (Extensions → Apps
+Script on the sheet).
+
+**Setup:**
+1. Add this to the Apps Script project's `Code.gs`, alongside the existing
+   `syncCoverImages` code:
+
+   ```javascript
+   function doPost(e) {
+     try {
+       const payload = JSON.parse(e.postData.contents);
+       const expectedSecret = PropertiesService.getScriptProperties().getProperty("RSVP_SECRET");
+
+       if (!expectedSecret || payload.secret !== expectedSecret) {
+         return jsonResponse({ ok: false, error: "Unauthorized" });
+       }
+
+       const eventTitle = String(payload.eventTitle || "").trim();
+       const guests = Math.max(1, parseInt(payload.guests, 10) || 1);
+
+       if (!eventTitle) {
+         return jsonResponse({ ok: false, error: "Missing eventTitle" });
+       }
+
+       const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Events");
+       const numRows = sheet.getLastRow();
+       const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+       const titleCol = headers.indexOf("Title") + 1;
+       const registeredCol = headers.indexOf("Registered") + 1;
+
+       if (!titleCol || !registeredCol) {
+         return jsonResponse({ ok: false, error: "Missing Title or Registered column" });
+       }
+
+       for (let row = 2; row <= numRows; row++) {
+         const rowTitle = String(sheet.getRange(row, titleCol).getValue() || "").trim();
+         if (rowTitle === eventTitle) {
+           const current = Number(sheet.getRange(row, registeredCol).getValue()) || 0;
+           const updated = current + guests;
+           sheet.getRange(row, registeredCol).setValue(updated);
+           return jsonResponse({ ok: true, registered: updated });
+         }
+       }
+
+       return jsonResponse({ ok: false, error: "Event not found" });
+     } catch (err) {
+       return jsonResponse({ ok: false, error: String(err) });
+     }
+   }
+
+   function jsonResponse(obj) {
+     return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+   }
+   ```
+
+2. In the Apps Script editor, click the gear icon (**Project Settings**) in the left
+   sidebar → **Script Properties** → **Add script property** → key `RSVP_SECRET`,
+   value: a long random string (ask Claude to generate one, or run
+   `openssl rand -hex 32` yourself). Save.
+3. Click **Deploy → New deployment** → gear icon next to "Select type" → **Web app**.
+   Configuration: Execute as **Me**, Who has access **Anyone**. Click **Deploy**, then
+   copy the resulting URL (ends in `/exec`).
+4. In Vercel, set `GOOGLE_APPS_SCRIPT_RSVP_URL` to that URL, and `SHEET_RSVP_SECRET`
+   to the *same* random value used for `RSVP_SECRET` in step 2 — these must match
+   exactly, or every request will be rejected as unauthorized.
+
+If either env var is missing, `/api/rsvp` silently skips the sheet update (the email
+notification still sends normally) rather than failing the visitor's RSVP — check the
+Vercel function logs for `"Failed to update Registered count in sheet"` if counts
+aren't updating as expected.
+
 ## Known gaps (carried over from the design handoff)
 
 - The "Buy Now" / book cover clicks all point to a single shared Square Payment
   Link, which doesn't support a real multi-item cart. For real checkout, wire up
   Square Online Store or the Buy Button/Checkout API per book.
-- Event "spots left" is computed from the sheet's capacity/registered numbers, not
-  live RSVP counts. Registering doesn't decrement it — needs a backend to track real
-  registrations and prevent overbooking.
+- RSVP increments `Registered` but doesn't enforce `Capacity` — someone can RSVP past
+  a full event and it'll still say "Full" without actually blocking them.
