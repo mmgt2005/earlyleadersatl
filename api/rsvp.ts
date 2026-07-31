@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { resend, TO_EMAIL, FROM_EMAIL } from "./_lib/resend";
 import { escapeHtml } from "./_lib/escapeHtml";
 import { isValidEmail } from "./_lib/validate";
-import { incrementEventRegistered } from "./_lib/sheetsWrite";
+import { recordRsvp } from "./_lib/sheetsWrite";
 
 interface RsvpPayload {
   name: string;
@@ -40,10 +40,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `,
     });
 
-    const sheetPromise = incrementEventRegistered(eventTitle || "", guestCount).catch((err) => {
+    const sheetPromise = recordRsvp({
+      eventTitle: eventTitle || "",
+      guests: guestCount,
+      name,
+      email,
+    }).catch((err) => {
       // Best-effort: the email notification is the source of truth, so a sheet
       // update failure shouldn't fail the visitor's RSVP.
-      console.error("Failed to update Registered count in sheet", err);
+      console.error("Failed to record RSVP in sheet", err);
     });
 
     const [{ error }] = await Promise.all([emailPromise, sheetPromise]);
