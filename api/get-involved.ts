@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { resend, TO_EMAIL, FROM_EMAIL } from "./_lib/resend";
 import { escapeHtml } from "./_lib/escapeHtml";
 import { isValidEmail } from "./_lib/validate";
+import { recordGetInvolved } from "./_lib/sheetsWrite";
 
 interface GetInvolvedPayload {
   name: string;
@@ -24,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { error } = await resend.emails.send({
+    const emailPromise = resend.emails.send({
       from: FROM_EMAIL,
       to: TO_EMAIL,
       replyTo: email,
@@ -36,6 +37,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <p><strong>Message:</strong><br/>${escapeHtml(message || "").replace(/\n/g, "<br/>")}</p>
       `,
     });
+
+    const sheetPromise = recordGetInvolved({
+      name,
+      email,
+      interest: interest || "",
+      message: message || "",
+    }).catch((err) => {
+      // Best-effort: the email notification is the source of truth, so a sheet
+      // update failure shouldn't fail the visitor's submission.
+      console.error("Failed to record Get Involved submission in sheet", err);
+    });
+
+    const [{ error }] = await Promise.all([emailPromise, sheetPromise]);
 
     if (error) {
       console.error("Resend rejected Get Involved email", error);
