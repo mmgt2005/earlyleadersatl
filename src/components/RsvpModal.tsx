@@ -93,17 +93,25 @@ export default function RsvpModal({
               <option value="4">4</option>
             </select>
           </div>
-          <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-            <span onClick={onClose} style={cancelButtonStyle}>
-              Cancel
-            </span>
-            <span
-              onClick={submitting ? undefined : onSubmit}
-              style={submitting ? submitButtonDisabledStyle : submitButtonStyle}
-            >
-              {submitting ? "Submitting…" : "Submit"}
-            </span>
-          </div>
+          {submitted ? (
+            <div style={{ display: "flex", marginTop: 6 }}>
+              <span onClick={onClose} style={submitButtonStyle}>
+                Close
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+              <span onClick={onClose} style={cancelButtonStyle}>
+                Cancel
+              </span>
+              <span
+                onClick={submitting ? undefined : onSubmit}
+                style={submitting ? submitButtonDisabledStyle : submitButtonStyle}
+              >
+                {submitting ? "Submitting…" : "Submit"}
+              </span>
+            </div>
+          )}
           {submitted && (
             <p
               style={{
