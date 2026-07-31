@@ -1,4 +1,11 @@
-export async function incrementEventRegistered(eventTitle: string, guests: number): Promise<void> {
+interface RsvpRecord {
+  eventTitle: string;
+  guests: number;
+  name: string;
+  email: string;
+}
+
+export async function recordRsvp(record: RsvpRecord): Promise<void> {
   const url = process.env.GOOGLE_APPS_SCRIPT_RSVP_URL;
   const secret = process.env.SHEET_RSVP_SECRET;
 
@@ -10,7 +17,7 @@ export async function incrementEventRegistered(eventTitle: string, guests: numbe
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret, eventTitle, guests }),
+    body: JSON.stringify({ secret, ...record }),
   });
 
   if (!response.ok) {
