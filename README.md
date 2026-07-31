@@ -73,19 +73,25 @@ send an email via Resend to `earlyleaderatl@gmail.com`.
   a custom domain in Resend and update `FROM_EMAIL` in `api/_lib/resend.ts` to send
   from `@earlyleadersatl.org` (or similar) and deliver to any recipient.
 
-## RSVP sheet updates (Apps Script)
+## Form submission sheet logging (Apps Script)
 
-Submitting an RSVP increments that event's `Registered` count in the Events tab, and
-appends a row (timestamp, event, name, email, guests) to an `RSVPs` log tab — created
-automatically the first time, no need to add it manually. Both happen via the same
-Apps Script project used for the Cover Images sync (Extensions → Apps Script on the
-sheet), so you have a durable record of who RSVP'd even if the notification email
-fails to send (e.g. before a domain is verified in Resend).
+Both forms write to the sheet in addition to sending an email, via the same Apps
+Script project used for the Cover Images sync (Extensions → Apps Script on the
+sheet) — so you have a durable record of every submission even if the notification
+email fails to send (e.g. before a domain is verified in Resend):
+
+- **RSVP** increments that event's `Registered` count in the Events tab, and appends
+  a row to an `RSVPs` log tab (timestamp, event, name, email, guests).
+- **Get Involved** appends a row to a `Get Involved` log tab (timestamp, name, email,
+  interest, message).
+
+Both log tabs are created automatically the first time they're needed — no need to
+add them manually.
 
 **Setup:**
 1. Add this to the Apps Script project's `Code.gs`, alongside the existing
-   `syncCoverImages` code (replace any previous `doPost`/`jsonResponse` if you added
-   an earlier version):
+   `syncCoverImages` code (replace any previous `doPost`/`jsonResponse`/`getOrCreateSheet`
+   if you added an earlier version):
 
    ```javascript
    function doPost(e) {
@@ -97,49 +103,70 @@ fails to send (e.g. before a domain is verified in Resend).
          return jsonResponse({ ok: false, error: "Unauthorized" });
        }
 
-       const eventTitle = String(payload.eventTitle || "").trim();
-       const guests = Math.max(1, parseInt(payload.guests, 10) || 1);
-       const name = String(payload.name || "").trim();
-       const email = String(payload.email || "").trim();
-
-       if (!eventTitle) {
-         return jsonResponse({ ok: false, error: "Missing eventTitle" });
+       const type = String(payload.type || "rsvp");
+       if (type === "get-involved") {
+         return handleGetInvolved(payload);
        }
-
-       const ss = SpreadsheetApp.getActiveSpreadsheet();
-       const eventsSheet = ss.getSheetByName("Events");
-       const numRows = eventsSheet.getLastRow();
-       const headers = eventsSheet.getRange(1, 1, 1, eventsSheet.getLastColumn()).getValues()[0];
-
-       const titleCol = headers.indexOf("Title") + 1;
-       const registeredCol = headers.indexOf("Registered") + 1;
-
-       if (!titleCol || !registeredCol) {
-         return jsonResponse({ ok: false, error: "Missing Title or Registered column" });
-       }
-
-       let updated = null;
-       for (let row = 2; row <= numRows; row++) {
-         const rowTitle = String(eventsSheet.getRange(row, titleCol).getValue() || "").trim();
-         if (rowTitle === eventTitle) {
-           const current = Number(eventsSheet.getRange(row, registeredCol).getValue()) || 0;
-           updated = current + guests;
-           eventsSheet.getRange(row, registeredCol).setValue(updated);
-           break;
-         }
-       }
-
-       if (updated === null) {
-         return jsonResponse({ ok: false, error: "Event not found" });
-       }
-
-       const logSheet = getOrCreateSheet(ss, "RSVPs", ["Timestamp", "Event", "Name", "Email", "Guests"]);
-       logSheet.appendRow([new Date(), eventTitle, name, email, guests]);
-
-       return jsonResponse({ ok: true, registered: updated });
+       return handleRsvp(payload);
      } catch (err) {
        return jsonResponse({ ok: false, error: String(err) });
      }
+   }
+
+   function handleRsvp(payload) {
+     const eventTitle = String(payload.eventTitle || "").trim();
+     const guests = Math.max(1, parseInt(payload.guests, 10) || 1);
+     const name = String(payload.name || "").trim();
+     const email = String(payload.email || "").trim();
+
+     if (!eventTitle) {
+       return jsonResponse({ ok: false, error: "Missing eventTitle" });
+     }
+
+     const ss = SpreadsheetApp.getActiveSpreadsheet();
+     const eventsSheet = ss.getSheetByName("Events");
+     const numRows = eventsSheet.getLastRow();
+     const headers = eventsSheet.getRange(1, 1, 1, eventsSheet.getLastColumn()).getValues()[0];
+
+     const titleCol = headers.indexOf("Title") + 1;
+     const registeredCol = headers.indexOf("Registered") + 1;
+
+     if (!titleCol || !registeredCol) {
+       return jsonResponse({ ok: false, error: "Missing Title or Registered column" });
+     }
+
+     let updated = null;
+     for (let row = 2; row <= numRows; row++) {
+       const rowTitle = String(eventsSheet.getRange(row, titleCol).getValue() || "").trim();
+       if (rowTitle === eventTitle) {
+         const current = Number(eventsSheet.getRange(row, registeredCol).getValue()) || 0;
+         updated = current + guests;
+         eventsSheet.getRange(row, registeredCol).setValue(updated);
+         break;
+       }
+     }
+
+     if (updated === null) {
+       return jsonResponse({ ok: false, error: "Event not found" });
+     }
+
+     const logSheet = getOrCreateSheet(ss, "RSVPs", ["Timestamp", "Event", "Name", "Email", "Guests"]);
+     logSheet.appendRow([new Date(), eventTitle, name, email, guests]);
+
+     return jsonResponse({ ok: true, registered: updated });
+   }
+
+   function handleGetInvolved(payload) {
+     const name = String(payload.name || "").trim();
+     const email = String(payload.email || "").trim();
+     const interest = String(payload.interest || "").trim();
+     const message = String(payload.message || "").trim();
+
+     const ss = SpreadsheetApp.getActiveSpreadsheet();
+     const logSheet = getOrCreateSheet(ss, "Get Involved", ["Timestamp", "Name", "Email", "Interest", "Message"]);
+     logSheet.appendRow([new Date(), name, email, interest, message]);
+
+     return jsonResponse({ ok: true });
    }
 
    function getOrCreateSheet(spreadsheet, name, headerRow) {
@@ -159,24 +186,27 @@ fails to send (e.g. before a domain is verified in Resend).
 2. In the Apps Script editor, click the gear icon (**Project Settings**) in the left
    sidebar → **Script Properties** → **Add script property** → key `RSVP_SECRET`,
    value: a long random string (ask Claude to generate one, or run
-   `openssl rand -hex 32` yourself). Save. Skip this if you already set it up for the
-   earlier (Registered-count-only) version — it's unchanged.
+   `openssl rand -hex 32` yourself). Save. Skip this if already set up from an earlier
+   version — it's unchanged and now guards both form types.
 3. **If you don't have a Web app deployment yet:** click **Deploy → New deployment** →
    gear icon next to "Select type" → **Web app**. Configuration: Execute as **Me**,
    Who has access **Anyone**. Click **Deploy**, then copy the URL (ends in `/exec`).
-   **If you already deployed the earlier version:** editing `Code.gs` alone doesn't
+   **If you already deployed an earlier version:** editing `Code.gs` alone doesn't
    update the live endpoint — go to **Deploy → Manage deployments**, click the pencil
    (edit) icon on the existing deployment, change **Version** to **New version**, and
    click **Deploy**. This keeps the same `/exec` URL, so you don't need to touch
    Vercel again.
 4. In Vercel, set `GOOGLE_APPS_SCRIPT_RSVP_URL` to that URL, and `SHEET_RSVP_SECRET`
    to the *same* random value used for `RSVP_SECRET` in step 2 — these must match
-   exactly, or every request will be rejected as unauthorized. Skip if already set.
+   exactly, or every request will be rejected as unauthorized. Skip if already set;
+   these two vars now serve both `/api/rsvp` and `/api/get-involved` despite the
+   "RSVP" naming.
 
-If either env var is missing, `/api/rsvp` silently skips the sheet update (the email
-notification still sends normally) rather than failing the visitor's RSVP — check the
-Vercel function logs for `"Failed to record RSVP in sheet"` if counts/log rows aren't
-updating as expected.
+If either env var is missing, both endpoints silently skip the sheet update (the
+email notification still sends normally) rather than failing the visitor's
+submission — check the Vercel function logs for `"Failed to record RSVP in sheet"` /
+`"Failed to record Get Involved submission in sheet"` if rows aren't appearing as
+expected.
 
 ## Known gaps (carried over from the design handoff)
 
