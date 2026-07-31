@@ -5,12 +5,16 @@ import {
   inputStyle,
   cancelButtonStyle,
   submitButtonStyle,
+  submitButtonDisabledStyle,
+  errorTextStyle,
 } from "./modalStyles";
 
 interface GetInvolvedModalProps {
   open: boolean;
   form: InterestForm;
+  submitting: boolean;
   submitted: boolean;
+  error: string | null;
   onClose: () => void;
   onChange: (field: keyof InterestForm, value: string) => void;
   onSubmit: () => void;
@@ -19,7 +23,9 @@ interface GetInvolvedModalProps {
 export default function GetInvolvedModal({
   open,
   form,
+  submitting,
   submitted,
+  error,
   onClose,
   onChange,
   onSubmit,
@@ -105,8 +111,11 @@ export default function GetInvolvedModal({
             <span onClick={onClose} style={cancelButtonStyle}>
               Cancel
             </span>
-            <span onClick={onSubmit} style={submitButtonStyle}>
-              Submit
+            <span
+              onClick={submitting ? undefined : onSubmit}
+              style={submitting ? submitButtonDisabledStyle : submitButtonStyle}
+            >
+              {submitting ? "Submitting…" : "Submit"}
             </span>
           </div>
           {submitted && (
@@ -122,6 +131,7 @@ export default function GetInvolvedModal({
               Thanks! We'll be in touch soon.
             </p>
           )}
+          {error && <p style={errorTextStyle}>{error}</p>}
         </div>
       </div>
     </div>
