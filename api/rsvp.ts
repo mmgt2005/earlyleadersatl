@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: TO_EMAIL,
       replyTo: email,
@@ -36,6 +36,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <p><strong>Guests attending:</strong> ${escapeHtml(guests || "1")}</p>
       `,
     });
+
+    if (error) {
+      console.error("Resend rejected RSVP email", error);
+      res.status(502).json({ error: "Failed to send email" });
+      return;
+    }
+
     res.status(200).json({ ok: true });
   } catch (err) {
     console.error("Failed to send RSVP email", err);
