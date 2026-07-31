@@ -1,0 +1,44 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { resend, TO_EMAIL, FROM_EMAIL } from "./_lib/resend";
+import { escapeHtml } from "./_lib/escapeHtml";
+import { isValidEmail } from "./_lib/validate";
+
+interface GetInvolvedPayload {
+  name: string;
+  email: string;
+  interest: string;
+  message: string;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const { name, email, interest, message } = (req.body ?? {}) as Partial<GetInvolvedPayload>;
+
+  if (!name?.trim() || !email?.trim() || !isValidEmail(email)) {
+    res.status(400).json({ error: "Name and a valid email are required" });
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: TO_EMAIL,
+      replyTo: email,
+      subject: `Get Involved: ${interest || "General"} — ${name}`,
+      html: `
+        <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+        <p><strong>Interested in:</strong> ${escapeHtml(interest || "")}</p>
+        <p><strong>Message:</strong><br/>${escapeHtml(message || "").replace(/\n/g, "<br/>")}</p>
+      `,
+    });
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("Failed to send Get Involved email", err);
+    res.status(502).json({ error: "Failed to send email" });
+  }
+}

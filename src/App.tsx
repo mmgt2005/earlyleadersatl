@@ -32,15 +32,20 @@ function App() {
 
   const [interestFormOpen, setInterestFormOpen] = useState(false);
   const [interestForm, setInterestForm] = useState<InterestForm>(EMPTY_INTEREST_FORM);
+  const [interestSubmitting, setInterestSubmitting] = useState(false);
   const [interestSubmitted, setInterestSubmitted] = useState(false);
+  const [interestError, setInterestError] = useState<string | null>(null);
 
   const [rsvpEventIndex, setRsvpEventIndex] = useState<number | null>(null);
   const [rsvpForm, setRsvpForm] = useState<RsvpForm>(EMPTY_RSVP_FORM);
+  const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+  const [rsvpError, setRsvpError] = useState<string | null>(null);
 
   const openInterestForm = () => {
     setInterestFormOpen(true);
     setInterestSubmitted(false);
+    setInterestError(null);
     setInterestForm(EMPTY_INTEREST_FORM);
   };
 
@@ -48,6 +53,44 @@ function App() {
     setRsvpEventIndex(index);
     setRsvpForm(EMPTY_RSVP_FORM);
     setRsvpSubmitted(false);
+    setRsvpError(null);
+  };
+
+  const submitInterestForm = async () => {
+    setInterestSubmitting(true);
+    setInterestError(null);
+    try {
+      const res = await fetch("/api/get-involved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(interestForm),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setInterestSubmitted(true);
+    } catch {
+      setInterestError("Something went wrong — please try again.");
+    } finally {
+      setInterestSubmitting(false);
+    }
+  };
+
+  const submitRsvpForm = async () => {
+    if (rsvpEventIndex === null) return;
+    setRsvpSubmitting(true);
+    setRsvpError(null);
+    try {
+      const res = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...rsvpForm, eventTitle: EVENTS[rsvpEventIndex].title }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setRsvpSubmitted(true);
+    } catch {
+      setRsvpError("Something went wrong — please try again.");
+    } finally {
+      setRsvpSubmitting(false);
+    }
   };
 
   return (
@@ -78,21 +121,25 @@ function App() {
       <GetInvolvedModal
         open={interestFormOpen}
         form={interestForm}
+        submitting={interestSubmitting}
         submitted={interestSubmitted}
+        error={interestError}
         onClose={() => setInterestFormOpen(false)}
         onChange={(field, value) =>
           setInterestForm((s) => ({ ...s, [field]: value }))
         }
-        onSubmit={() => setInterestSubmitted(true)}
+        onSubmit={submitInterestForm}
       />
 
       <RsvpModal
         eventTitle={rsvpEventIndex !== null ? EVENTS[rsvpEventIndex].title : null}
         form={rsvpForm}
+        submitting={rsvpSubmitting}
         submitted={rsvpSubmitted}
+        error={rsvpError}
         onClose={() => setRsvpEventIndex(null)}
         onChange={(field, value) => setRsvpForm((s) => ({ ...s, [field]: value }))}
-        onSubmit={() => setRsvpSubmitted(true)}
+        onSubmit={submitRsvpForm}
       />
     </div>
   );

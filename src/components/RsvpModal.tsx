@@ -5,12 +5,16 @@ import {
   inputStyle,
   cancelButtonStyle,
   submitButtonStyle,
+  submitButtonDisabledStyle,
+  errorTextStyle,
 } from "./modalStyles";
 
 interface RsvpModalProps {
   eventTitle: string | null;
   form: RsvpForm;
+  submitting: boolean;
   submitted: boolean;
+  error: string | null;
   onClose: () => void;
   onChange: (field: keyof RsvpForm, value: string) => void;
   onSubmit: () => void;
@@ -19,7 +23,9 @@ interface RsvpModalProps {
 export default function RsvpModal({
   eventTitle,
   form,
+  submitting,
   submitted,
+  error,
   onClose,
   onChange,
   onSubmit,
@@ -91,8 +97,11 @@ export default function RsvpModal({
             <span onClick={onClose} style={cancelButtonStyle}>
               Cancel
             </span>
-            <span onClick={onSubmit} style={submitButtonStyle}>
-              Submit
+            <span
+              onClick={submitting ? undefined : onSubmit}
+              style={submitting ? submitButtonDisabledStyle : submitButtonStyle}
+            >
+              {submitting ? "Submitting…" : "Submit"}
             </span>
           </div>
           {submitted && (
@@ -108,6 +117,7 @@ export default function RsvpModal({
               You're on the list! See you there.
             </p>
           )}
+          {error && <p style={errorTextStyle}>{error}</p>}
         </div>
       </div>
     </div>

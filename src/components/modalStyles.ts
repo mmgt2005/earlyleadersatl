@@ -53,3 +53,17 @@ export const submitButtonStyle: CSSProperties = {
   fontSize: 13.5,
   cursor: "pointer",
 };
+
+export const submitButtonDisabledStyle: CSSProperties = {
+  ...submitButtonStyle,
+  opacity: 0.6,
+  cursor: "default",
+};
+
+export const errorTextStyle: CSSProperties = {
+  fontSize: 13,
+  color: "#b3261e",
+  fontWeight: 700,
+  margin: "14px 0 0",
+  textAlign: "center",
+};
