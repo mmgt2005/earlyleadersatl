@@ -12,7 +12,7 @@ import Footer from "./components/Footer";
 import Lightbox from "./components/Lightbox";
 import GetInvolvedModal from "./components/GetInvolvedModal";
 import RsvpModal from "./components/RsvpModal";
-import TransitionModal from "./components/TransitionModal";
+import RedirectNoticeModal, { type RedirectNotice } from "./components/RedirectNoticeModal";
 import { BOOKS as FALLBACK_BOOKS, BOOKS_PAGE_SIZE } from "./data/books";
 import { EVENTS as FALLBACK_EVENTS, EVENTS_PAGE_SIZE } from "./data/events";
 import type { Book, EventItem, InterestForm, RsvpForm } from "./types";
@@ -25,6 +25,18 @@ const EMPTY_INTEREST_FORM: InterestForm = {
 };
 
 const EMPTY_RSVP_FORM: RsvpForm = { name: "", email: "", guests: "1" };
+
+const DONATE_NOTICE: RedirectNotice = {
+  title: "Thanks for Your Support!",
+  message:
+    "We opened the donation page in a new tab. Feel free to close it and come back here anytime.",
+};
+
+const CHECKOUT_NOTICE: RedirectNotice = {
+  title: "Thanks for Shopping With Us!",
+  message:
+    "We opened Bookbag Books checkout in a new tab. Feel free to close it and come back here anytime.",
+};
 
 function App() {
   const [books, setBooks] = useState<Book[]>(FALLBACK_BOOKS);
@@ -54,11 +66,7 @@ function App() {
   const [visibleBookCount, setVisibleBookCount] = useState(BOOKS_PAGE_SIZE);
   const [visibleEventCount, setVisibleEventCount] = useState(EVENTS_PAGE_SIZE);
 
-  const [transitionLabel, setTransitionLabel] = useState<string | null>(null);
-  const triggerTransition = (label: string) => {
-    setTransitionLabel(label);
-    window.setTimeout(() => setTransitionLabel(null), 1200);
-  };
+  const [redirectNotice, setRedirectNotice] = useState<RedirectNotice | null>(null);
 
   const [interestFormOpen, setInterestFormOpen] = useState(false);
   const [interestForm, setInterestForm] = useState<InterestForm>(EMPTY_INTEREST_FORM);
@@ -128,14 +136,14 @@ function App() {
   return (
     <div style={{ color: "#1c1b18" }}>
       <Header />
-      <Hero onDonateClick={() => triggerTransition("Taking you to Donate…")} />
+      <Hero onDonateClick={() => setRedirectNotice(DONATE_NOTICE)} />
       <ExploreNav onOpenInterestForm={openInterestForm} />
       <Shop
         books={books.slice(0, visibleBookCount)}
         hasMore={visibleBookCount < books.length}
         onShowMore={() => setVisibleBookCount((n) => n + BOOKS_PAGE_SIZE)}
         onOpenCover={setLightboxSrc}
-        onBuyNowClick={() => triggerTransition("Taking you to Checkout…")}
+        onBuyNowClick={() => setRedirectNotice(CHECKOUT_NOTICE)}
       />
       <Programs />
       <Events
@@ -146,10 +154,10 @@ function App() {
       />
       <Mascots />
       <Board />
-      <DonateCta onDonateClick={() => triggerTransition("Taking you to Donate…")} />
+      <DonateCta onDonateClick={() => setRedirectNotice(DONATE_NOTICE)} />
       <Footer />
 
-      <TransitionModal label={transitionLabel} />
+      <RedirectNoticeModal notice={redirectNotice} onClose={() => setRedirectNotice(null)} />
 
       <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
 
