@@ -5,9 +5,10 @@ interface ShopProps {
   hasMore: boolean;
   onShowMore: () => void;
   onOpenCover: (src: string) => void;
+  onBuyNowClick: () => void;
 }
 
-export default function Shop({ books, hasMore, onShowMore, onOpenCover }: ShopProps) {
+export default function Shop({ books, hasMore, onShowMore, onOpenCover, onBuyNowClick }: ShopProps) {
   return (
     <div
       id="square-shop"
@@ -148,9 +149,10 @@ export default function Shop({ books, hasMore, onShowMore, onOpenCover }: ShopPr
           </span>
         )}
         <a
-          href="https://square.link/u/wzRTsGub"
+          href="https://earlyleadersatl.square.site/"
           target="_blank"
           rel="noreferrer"
+          onClick={onBuyNowClick}
           style={{
             display: "inline-block",
             background: "#FFDD00",

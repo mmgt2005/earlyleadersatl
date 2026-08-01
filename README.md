@@ -208,10 +208,19 @@ submission — check the Vercel function logs for `"Failed to record RSVP in she
 `"Failed to record Get Involved submission in sheet"` if rows aren't appearing as
 expected.
 
+## External checkout/donate links
+
+"Buy Now" links to the real Square Online Store (`https://earlyleadersatl.square.site/`,
+supports a real multi-item cart), and "Donate Now" links to a Square Payment Link.
+Both open in a new tab — true in-page embedding (iframe) isn't possible since Square
+blocks it on checkout/payment pages by design (clickjacking protection). Clicking
+either shows a brief "Taking you to…" transition modal (`TransitionModal.tsx`,
+auto-dismisses after 1.2s) while the native link navigation happens simultaneously;
+it doesn't call `window.open()` itself, so there's no popup-blocker risk.
+
+Book cover clicks still just open the lightbox preview — they aren't purchase links.
+
 ## Known gaps (carried over from the design handoff)
 
-- The "Buy Now" / book cover clicks all point to a single shared Square Payment
-  Link, which doesn't support a real multi-item cart. For real checkout, wire up
-  Square Online Store or the Buy Button/Checkout API per book.
 - RSVP increments `Registered` but doesn't enforce `Capacity` — someone can RSVP past
   a full event and it'll still say "Full" without actually blocking them.

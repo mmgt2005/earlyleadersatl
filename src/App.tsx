@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import Lightbox from "./components/Lightbox";
 import GetInvolvedModal from "./components/GetInvolvedModal";
 import RsvpModal from "./components/RsvpModal";
+import TransitionModal from "./components/TransitionModal";
 import { BOOKS as FALLBACK_BOOKS, BOOKS_PAGE_SIZE } from "./data/books";
 import { EVENTS as FALLBACK_EVENTS, EVENTS_PAGE_SIZE } from "./data/events";
 import type { Book, EventItem, InterestForm, RsvpForm } from "./types";
@@ -52,6 +53,12 @@ function App() {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [visibleBookCount, setVisibleBookCount] = useState(BOOKS_PAGE_SIZE);
   const [visibleEventCount, setVisibleEventCount] = useState(EVENTS_PAGE_SIZE);
+
+  const [transitionLabel, setTransitionLabel] = useState<string | null>(null);
+  const triggerTransition = (label: string) => {
+    setTransitionLabel(label);
+    window.setTimeout(() => setTransitionLabel(null), 1200);
+  };
 
   const [interestFormOpen, setInterestFormOpen] = useState(false);
   const [interestForm, setInterestForm] = useState<InterestForm>(EMPTY_INTEREST_FORM);
@@ -121,13 +128,14 @@ function App() {
   return (
     <div style={{ color: "#1c1b18" }}>
       <Header />
-      <Hero />
+      <Hero onDonateClick={() => triggerTransition("Taking you to Donate…")} />
       <ExploreNav onOpenInterestForm={openInterestForm} />
       <Shop
         books={books.slice(0, visibleBookCount)}
         hasMore={visibleBookCount < books.length}
         onShowMore={() => setVisibleBookCount((n) => n + BOOKS_PAGE_SIZE)}
         onOpenCover={setLightboxSrc}
+        onBuyNowClick={() => triggerTransition("Taking you to Checkout…")}
       />
       <Programs />
       <Events
@@ -138,8 +146,10 @@ function App() {
       />
       <Mascots />
       <Board />
-      <DonateCta />
+      <DonateCta onDonateClick={() => triggerTransition("Taking you to Donate…")} />
       <Footer />
+
+      <TransitionModal label={transitionLabel} />
 
       <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
 
