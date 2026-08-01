@@ -43,9 +43,14 @@ or edit one.
 
 **Books tab columns:**
 
-| Title | Cover Image URL |
-|---|---|
-| The Champions Coloring Book | https://... |
+| Title | Cover Image URL | Description |
+|---|---|---|
+| The Champions Coloring Book | https://... | A joyful coloring book celebrating young leaders. |
+
+`Description` is optional — leave it blank and the book's lightbox (opened by
+clicking its cover) just shows the image and title with no paragraph. When
+present, it's shown alongside the cover in that lightbox, so keep it to 1–2
+short sentences; it isn't shown anywhere else on the page.
 
 **Events tab columns:**
 
