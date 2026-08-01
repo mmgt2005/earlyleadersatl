@@ -1,6 +1,10 @@
 import HeroDecoration from "./HeroDecoration";
 
-export default function Hero() {
+interface HeroProps {
+  onDonateClick: () => void;
+}
+
+export default function Hero({ onDonateClick }: HeroProps) {
   return (
     <div
       style={{
@@ -108,6 +112,7 @@ export default function Hero() {
               href="https://square.link/u/wzRTsGub"
               target="_blank"
               rel="noreferrer"
+              onClick={onDonateClick}
               style={{
                 display: "inline-block",
                 background: "#FFDD00",

@@ -1,4 +1,8 @@
-export default function DonateCta() {
+interface DonateCtaProps {
+  onDonateClick: () => void;
+}
+
+export default function DonateCta({ onDonateClick }: DonateCtaProps) {
   return (
     <div
       id="donate-cta"
@@ -36,6 +40,7 @@ export default function DonateCta() {
         href="https://square.link/u/wzRTsGub"
         target="_blank"
         rel="noreferrer"
+        onClick={onDonateClick}
         style={{
           display: "inline-block",
           background: "#FFDD00",
