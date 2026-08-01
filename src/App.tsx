@@ -88,6 +88,8 @@ function App() {
   };
 
   const handleRsvp = (index: number) => {
+    const event = events[index];
+    if (event && event.capacity - event.registered <= 0) return;
     setRsvpEventIndex(index);
     setRsvpForm(EMPTY_RSVP_FORM);
     setRsvpSubmitted(false);
@@ -124,7 +126,11 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...rsvpForm, eventTitle: rsvpEvent.title }),
       });
-      if (!res.ok) throw new Error("Request failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setRsvpError(body?.error || "Something went wrong — please try again.");
+        return;
+      }
       setRsvpSubmitted(true);
     } catch {
       setRsvpError("Something went wrong — please try again.");

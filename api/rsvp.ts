@@ -26,8 +26,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const guestCount = Number(guests) || 1;
 
+  // Checked before sending anything: a capacity rejection must block the whole
+  // RSVP, not just log a warning. Infrastructure failures (missing env vars,
+  // Apps Script errors) are best-effort and don't block — only a definitive
+  // "full" result does.
   try {
-    const emailPromise = resend.emails.send({
+    const outcome = await recordRsvp({
+      eventTitle: eventTitle || "",
+      guests: guestCount,
+      name,
+      email,
+    });
+
+    if (outcome === "full") {
+      res.status(409).json({ error: "This event is now full." });
+      return;
+    }
+  } catch (err) {
+    console.error("Failed to record RSVP in sheet", err);
+  }
+
+  try {
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: TO_EMAIL,
       replyTo: email,
@@ -39,19 +59,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <p><strong>Guests attending:</strong> ${escapeHtml(guests || "1")}</p>
       `,
     });
-
-    const sheetPromise = recordRsvp({
-      eventTitle: eventTitle || "",
-      guests: guestCount,
-      name,
-      email,
-    }).catch((err) => {
-      // Best-effort: the email notification is the source of truth, so a sheet
-      // update failure shouldn't fail the visitor's RSVP.
-      console.error("Failed to record RSVP in sheet", err);
-    });
-
-    const [{ error }] = await Promise.all([emailPromise, sheetPromise]);
 
     if (error) {
       console.error("Resend rejected RSVP email", error);

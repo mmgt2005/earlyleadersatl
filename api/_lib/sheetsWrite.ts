@@ -1,10 +1,16 @@
-async function postToAppsScript(payload: Record<string, unknown>): Promise<void> {
+interface AppsScriptResponse {
+  ok: boolean;
+  error?: string;
+  registered?: number;
+}
+
+async function postToAppsScript(payload: Record<string, unknown>): Promise<AppsScriptResponse | null> {
   const url = process.env.GOOGLE_APPS_SCRIPT_RSVP_URL;
   const secret = process.env.SHEET_RSVP_SECRET;
 
   if (!url || !secret) {
     console.warn("GOOGLE_APPS_SCRIPT_RSVP_URL or SHEET_RSVP_SECRET not set; skipping sheet update");
-    return;
+    return null;
   }
 
   const response = await fetch(url, {
@@ -17,11 +23,14 @@ async function postToAppsScript(payload: Record<string, unknown>): Promise<void>
     throw new Error(`Apps Script request failed (status ${response.status})`);
   }
 
-  const result = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-  if (!result || result.ok !== true) {
-    throw new Error(`Sheet update failed: ${result?.error ?? "unknown error"}`);
+  const result = (await response.json().catch(() => null)) as AppsScriptResponse | null;
+  if (!result) {
+    throw new Error("Invalid response from Apps Script");
   }
+  return result;
 }
+
+export type RsvpOutcome = "recorded" | "full" | "skipped";
 
 interface RsvpRecord {
   eventTitle: string;
@@ -30,8 +39,12 @@ interface RsvpRecord {
   email: string;
 }
 
-export async function recordRsvp(record: RsvpRecord): Promise<void> {
-  await postToAppsScript({ type: "rsvp", ...record });
+export async function recordRsvp(record: RsvpRecord): Promise<RsvpOutcome> {
+  const result = await postToAppsScript({ type: "rsvp", ...record });
+  if (result === null) return "skipped";
+  if (result.ok) return "recorded";
+  if (result.error === "Full") return "full";
+  throw new Error(`Sheet update failed: ${result.error ?? "unknown error"}`);
 }
 
 interface GetInvolvedRecord {
@@ -42,5 +55,9 @@ interface GetInvolvedRecord {
 }
 
 export async function recordGetInvolved(record: GetInvolvedRecord): Promise<void> {
-  await postToAppsScript({ type: "get-involved", ...record });
+  const result = await postToAppsScript({ type: "get-involved", ...record });
+  if (result === null) return;
+  if (!result.ok) {
+    throw new Error(`Sheet update failed: ${result.error ?? "unknown error"}`);
+  }
 }
