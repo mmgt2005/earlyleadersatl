@@ -2,6 +2,7 @@ export interface Book {
   cover: string;
   alt: string;
   title: string;
+  description?: string;
 }
 
 export interface EventItem {

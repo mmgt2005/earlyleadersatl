@@ -4,7 +4,7 @@ interface ShopProps {
   books: Book[];
   hasMore: boolean;
   onShowMore: () => void;
-  onOpenCover: (src: string) => void;
+  onOpenCover: (book: Book) => void;
   onBuyNowClick: () => void;
 }
 
@@ -94,7 +94,7 @@ export default function Shop({ books, hasMore, onShowMore, onOpenCover, onBuyNow
             <div
               role="img"
               aria-label={book.alt}
-              onClick={() => onOpenCover(book.cover)}
+              onClick={() => onOpenCover(book)}
               style={{
                 width: 120,
                 height: 150,

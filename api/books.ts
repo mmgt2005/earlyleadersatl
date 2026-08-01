@@ -23,10 +23,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const title = normalized["title"];
         const cover =
           normalized["coverimageurl"] || normalized["coverurl"] || normalized["cover"];
+        const description = normalized["description"] || "";
 
         if (!title || !cover) return null;
 
-        return { title, cover, alt: `${title} cover` };
+        return { title, cover, alt: `${title} cover`, description };
       })
       .filter((book): book is Book => book !== null);
 

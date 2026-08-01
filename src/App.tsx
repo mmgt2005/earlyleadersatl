@@ -62,7 +62,7 @@ function App() {
       });
   }, []);
 
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxBook, setLightboxBook] = useState<Book | null>(null);
   const [visibleBookCount, setVisibleBookCount] = useState(BOOKS_PAGE_SIZE);
   const [visibleEventCount, setVisibleEventCount] = useState(EVENTS_PAGE_SIZE);
 
@@ -148,7 +148,7 @@ function App() {
         books={books.slice(0, visibleBookCount)}
         hasMore={visibleBookCount < books.length}
         onShowMore={() => setVisibleBookCount((n) => n + BOOKS_PAGE_SIZE)}
-        onOpenCover={setLightboxSrc}
+        onOpenCover={setLightboxBook}
         onBuyNowClick={() => setRedirectNotice(CHECKOUT_NOTICE)}
       />
       <Programs />
@@ -165,7 +165,7 @@ function App() {
 
       <RedirectNoticeModal notice={redirectNotice} onClose={() => setRedirectNotice(null)} />
 
-      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      <Lightbox book={lightboxBook} onClose={() => setLightboxBook(null)} />
 
       <GetInvolvedModal
         open={interestFormOpen}
