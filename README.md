@@ -213,10 +213,14 @@ expected.
 "Buy Now" links to the real Square Online Store (`https://earlyleadersatl.square.site/`,
 supports a real multi-item cart), and "Donate Now" links to a Square Payment Link.
 Both open in a new tab — true in-page embedding (iframe) isn't possible since Square
-blocks it on checkout/payment pages by design (clickjacking protection). Clicking
-either shows a brief "Taking you to…" transition modal (`TransitionModal.tsx`,
-auto-dismisses after 1.2s) while the native link navigation happens simultaneously;
-it doesn't call `window.open()` itself, so there's no popup-blocker risk.
+blocks it on checkout/payment pages by design (clickjacking protection).
+
+Clicking either also shows a `RedirectNoticeModal.tsx` ("Thanks for Your Support!" /
+"Thanks for Shopping With Us!"). It's not a pre-navigation transition — a new tab
+steals focus the instant it opens, so anything shown in the origin tab at that exact
+moment is never actually seen. Instead the notice persists (no auto-dismiss) until
+the visitor clicks "Got it" or clicks outside it, so it's naturally still there
+whenever they return to this tab, whether by closing the new tab or switching back.
 
 Book cover clicks still just open the lightbox preview — they aren't purchase links.
 
