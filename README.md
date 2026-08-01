@@ -80,8 +80,9 @@ Script project used for the Cover Images sync (Extensions → Apps Script on the
 sheet) — so you have a durable record of every submission even if the notification
 email fails to send (e.g. before a domain is verified in Resend):
 
-- **RSVP** increments that event's `Registered` count in the Events tab, and appends
-  a row to an `RSVPs` log tab (timestamp, event, name, email, guests).
+- **RSVP** increments that event's `Registered` count in the Events tab (rejecting
+  the RSVP if it would exceed `Capacity` — see below), and appends a row to an
+  `RSVPs` log tab (timestamp, event, name, email, guests).
 - **Get Involved** appends a row to a `Get Involved` log tab (timestamp, name, email,
   interest, message).
 
@@ -130,9 +131,10 @@ add them manually.
 
      const titleCol = headers.indexOf("Title") + 1;
      const registeredCol = headers.indexOf("Registered") + 1;
+     const capacityCol = headers.indexOf("Capacity") + 1;
 
-     if (!titleCol || !registeredCol) {
-       return jsonResponse({ ok: false, error: "Missing Title or Registered column" });
+     if (!titleCol || !registeredCol || !capacityCol) {
+       return jsonResponse({ ok: false, error: "Missing Title, Capacity, or Registered column" });
      }
 
      let updated = null;
@@ -140,6 +142,12 @@ add them manually.
        const rowTitle = String(eventsSheet.getRange(row, titleCol).getValue() || "").trim();
        if (rowTitle === eventTitle) {
          const current = Number(eventsSheet.getRange(row, registeredCol).getValue()) || 0;
+         const capacity = Number(eventsSheet.getRange(row, capacityCol).getValue()) || 0;
+
+         if (current + guests > capacity) {
+           return jsonResponse({ ok: false, error: "Full" });
+         }
+
          updated = current + guests;
          eventsSheet.getRange(row, registeredCol).setValue(updated);
          break;
@@ -224,7 +232,13 @@ whenever they return to this tab, whether by closing the new tab or switching ba
 
 Book cover clicks still just open the lightbox preview — they aren't purchase links.
 
-## Known gaps (carried over from the design handoff)
+## RSVP capacity enforcement
 
-- RSVP increments `Registered` but doesn't enforce `Capacity` — someone can RSVP past
-  a full event and it'll still say "Full" without actually blocking them.
+Once `Registered` reaches `Capacity`, the RSVP button on that event is replaced with
+a disabled "Full" pill — no modal opens. This is enforced server-side too, not just
+in the UI: the Apps Script's `handleRsvp` rejects any RSVP that would push
+`Registered` over `Capacity` (returning `{ ok: false, error: "Full" }`), and
+`/api/rsvp` treats that as a hard failure — it returns `409` and skips sending the
+confirmation email entirely, rather than best-effort-logging it like other sheet
+write failures. The frontend surfaces the exact message ("This event is now full.")
+in the RSVP modal.

@@ -7,10 +7,14 @@ interface EventsProps {
   onRsvp: (index: number) => void;
 }
 
+function spotsLeft(event: EventItem): number {
+  return event.capacity - event.registered;
+}
+
 function spotsLabel(event: EventItem): string {
-  const spotsLeft = event.capacity - event.registered;
-  if (spotsLeft <= 0) return "Full";
-  return `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`;
+  const left = spotsLeft(event);
+  if (left <= 0) return "Full";
+  return `${left} spot${left === 1 ? "" : "s"} left`;
 }
 
 export default function Events({ events, hasMore, onShowMore, onRsvp }: EventsProps) {
@@ -106,21 +110,38 @@ export default function Events({ events, hasMore, onShowMore, onRsvp }: EventsPr
               <p style={{ fontSize: 11.5, fontWeight: 700, color: "#8a6d00", margin: "0 0 10px" }}>
                 {spotsLabel(ev)}
               </p>
-              <span
-                onClick={() => onRsvp(i)}
-                style={{
-                  display: "inline-block",
-                  background: "#282882",
-                  color: "#FFDD00",
-                  padding: "9px 20px",
-                  borderRadius: 999,
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                RSVP
-              </span>
+              {spotsLeft(ev) <= 0 ? (
+                <span
+                  style={{
+                    display: "inline-block",
+                    background: "#ece9e2",
+                    color: "#8a877e",
+                    padding: "9px 20px",
+                    borderRadius: 999,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "default",
+                  }}
+                >
+                  Full
+                </span>
+              ) : (
+                <span
+                  onClick={() => onRsvp(i)}
+                  style={{
+                    display: "inline-block",
+                    background: "#282882",
+                    color: "#FFDD00",
+                    padding: "9px 20px",
+                    borderRadius: 999,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  RSVP
+                </span>
+              )}
             </div>
           </div>
         ))}
