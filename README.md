@@ -66,17 +66,27 @@ Row order in the sheet is the display order.
 ## Form emails (Resend)
 
 The Get Involved and RSVP forms POST to `/api/get-involved` and `/api/rsvp`, which
-send an email via Resend to `earlyleaderatl@gmail.com`.
+send a **confirmation email to the visitor** (not a notification to the org) via
+Resend — "Thanks for Your Interest" / "You're Confirmed for {event}". `replyTo` is
+set to `CONTACT_EMAIL` (`earlyleaderatl@gmail.com`, in `api/_lib/resend.ts`), so a
+visitor replying to their confirmation lands in the org's inbox.
+
+Admins don't get an email at all — the sheet logging (see "Form submission sheet
+logging" below) is the record of who submitted what. Check the `RSVPs` and
+`Get Involved` tabs for new entries rather than watching an inbox.
 
 - Set `RESEND_API_KEY` in Vercel Project Settings → Environment Variables (see
   `.env.example`). Never commit the real key.
 - These endpoints only run on Vercel — `npm run dev` (plain Vite) can't serve
   `/api/*`, so submissions will show the error state locally. Use `vercel dev` to
   test them locally, or test on a deployed preview.
-- Currently sending from Resend's sandbox address (`onboarding@resend.dev`), which
-  only delivers to the email address the Resend account is registered under. Verify
-  a custom domain in Resend and update `FROM_EMAIL` in `api/_lib/resend.ts` to send
-  from `@earlyleadersatl.org` (or similar) and deliver to any recipient.
+- **Domain verification is a hard requirement now, not optional.** Sending from
+  Resend's sandbox address (`onboarding@resend.dev`) only delivers to the email
+  address the Resend account itself is registered under — since the recipient is
+  now an arbitrary visitor's address instead of the org's own fixed address, sandbox
+  mode will fail to deliver almost every confirmation email. Verify a custom domain
+  in Resend and update `FROM_EMAIL` in `api/_lib/resend.ts` to send from
+  `@earlyleadersatl.org` (or similar) before relying on this in production.
 
 ## Form submission sheet logging (Apps Script)
 
