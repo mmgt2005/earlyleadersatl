@@ -80,13 +80,11 @@ logging" below) is the record of who submitted what. Check the `RSVPs` and
 - These endpoints only run on Vercel — `npm run dev` (plain Vite) can't serve
   `/api/*`, so submissions will show the error state locally. Use `vercel dev` to
   test them locally, or test on a deployed preview.
-- **Domain verification is a hard requirement now, not optional.** Sending from
-  Resend's sandbox address (`onboarding@resend.dev`) only delivers to the email
-  address the Resend account itself is registered under — since the recipient is
-  now an arbitrary visitor's address instead of the org's own fixed address, sandbox
-  mode will fail to deliver almost every confirmation email. Verify a custom domain
-  in Resend and update `FROM_EMAIL` in `api/_lib/resend.ts` to send from
-  `@earlyleadersatl.org` (or similar) before relying on this in production.
+- Sending from a verified domain (`FROM_EMAIL` in `api/_lib/resend.ts` is
+  `info@earlyleadersatl.org`), so confirmations deliver to any visitor's address —
+  this was a hard requirement once the recipient became the visitor rather than the
+  org's own fixed address, since Resend's sandbox sender (`onboarding@resend.dev`)
+  only delivers to the email the Resend account itself is registered under.
 
 ## Form submission sheet logging (Apps Script)
 
