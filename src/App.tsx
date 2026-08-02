@@ -124,7 +124,7 @@ function App() {
       const res = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...rsvpForm, eventTitle: rsvpEvent.title }),
+        body: JSON.stringify({ ...rsvpForm, eventTitle: rsvpEvent.title, eventWhen: rsvpEvent.when }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);

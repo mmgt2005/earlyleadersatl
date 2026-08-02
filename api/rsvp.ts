@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { resend, TO_EMAIL, FROM_EMAIL } from "./_lib/resend";
+import { resend, CONTACT_EMAIL, FROM_EMAIL } from "./_lib/resend";
 import { escapeHtml } from "./_lib/escapeHtml";
 import { isValidEmail } from "./_lib/validate";
 import { recordRsvp } from "./_lib/sheetsWrite";
@@ -9,6 +9,7 @@ interface RsvpPayload {
   email: string;
   guests: string;
   eventTitle: string;
+  eventWhen: string;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -17,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { name, email, guests, eventTitle } = (req.body ?? {}) as Partial<RsvpPayload>;
+  const { name, email, guests, eventTitle, eventWhen } = (req.body ?? {}) as Partial<RsvpPayload>;
 
   if (!name?.trim() || !email?.trim() || !isValidEmail(email)) {
     res.status(400).json({ error: "Name and a valid email are required" });
@@ -49,26 +50,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to: TO_EMAIL,
-      replyTo: email,
-      subject: `RSVP: ${eventTitle || "Event"} — ${name}`,
+      to: email,
+      replyTo: CONTACT_EMAIL,
+      subject: `You're Confirmed for ${eventTitle || "the Event"}!`,
       html: `
-        <p><strong>Event:</strong> ${escapeHtml(eventTitle || "")}</p>
-        <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-        <p><strong>Guests attending:</strong> ${escapeHtml(guests || "1")}</p>
+        <p>Hi ${escapeHtml(name)},</p>
+        <p>You're confirmed for <strong>${escapeHtml(eventTitle || "the event")}</strong>${
+          eventWhen ? ` — ${escapeHtml(eventWhen)}` : ""
+        } (${escapeHtml(guests || "1")} guest${guestCount === 1 ? "" : "s"} attending). We can't wait to see you there!</p>
+        <p>Questions? Reach out to us at ${CONTACT_EMAIL}.</p>
+        <p>Big Dreams. Brave Hearts. Bright Futures.<br/>— Early Leaders Atl</p>
       `,
     });
 
     if (error) {
-      console.error("Resend rejected RSVP email", error);
-      res.status(502).json({ error: "Failed to send email" });
+      console.error("Resend rejected RSVP confirmation email", error);
+      res.status(502).json({ error: "Failed to send confirmation email" });
       return;
     }
 
     res.status(200).json({ ok: true });
   } catch (err) {
-    console.error("Failed to send RSVP email", err);
-    res.status(502).json({ error: "Failed to send email" });
+    console.error("Failed to send RSVP confirmation email", err);
+    res.status(502).json({ error: "Failed to send confirmation email" });
   }
 }
