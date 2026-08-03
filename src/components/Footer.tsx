@@ -12,7 +12,7 @@ export default function Footer() {
       }}
     >
       <p style={{ fontSize: 13, color: "#6a685f", margin: 0 }}>
-        earlyleaderatl@gmail.com · Atlanta, GA
+        info@earlyleadersatl.org · Atlanta, GA
       </p>
       <div
         style={{
