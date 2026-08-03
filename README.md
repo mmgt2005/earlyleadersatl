@@ -68,7 +68,7 @@ Row order in the sheet is the display order.
 The Get Involved and RSVP forms POST to `/api/get-involved` and `/api/rsvp`, which
 send a **confirmation email to the visitor** (not a notification to the org) via
 Resend — "Thanks for Your Interest" / "You're Confirmed for {event}". `replyTo` is
-set to `CONTACT_EMAIL` (`earlyleaderatl@gmail.com`, in `api/_lib/resend.ts`), so a
+set to `CONTACT_EMAIL` (`info@earlyleadersatl.org`, in `api/_lib/resend.ts`), so a
 visitor replying to their confirmation lands in the org's inbox.
 
 Admins don't get an email at all — the sheet logging (see "Form submission sheet
