@@ -11,7 +11,10 @@ export default function Header() {
         background: "#282882",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <a
+        href="#top"
+        style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}
+      >
         <img
           src="/images/logo.png"
           alt="Early Leaders"
@@ -33,7 +36,7 @@ export default function Header() {
             Atl
           </div>
         </div>
-      </div>
+      </a>
     </div>
   );
 }
