@@ -61,3 +61,15 @@ export async function recordGetInvolved(record: GetInvolvedRecord): Promise<void
     throw new Error(`Sheet update failed: ${result.error ?? "unknown error"}`);
   }
 }
+
+interface NewsletterRecord {
+  email: string;
+}
+
+export async function recordNewsletterSignup(record: NewsletterRecord): Promise<void> {
+  const result = await postToAppsScript({ type: "newsletter", ...record });
+  if (result === null) return;
+  if (!result.ok) {
+    throw new Error(`Sheet update failed: ${result.error ?? "unknown error"}`);
+  }
+}

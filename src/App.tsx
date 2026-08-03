@@ -13,6 +13,7 @@ import Lightbox from "./components/Lightbox";
 import GetInvolvedModal from "./components/GetInvolvedModal";
 import RsvpModal from "./components/RsvpModal";
 import RedirectNoticeModal, { type RedirectNotice } from "./components/RedirectNoticeModal";
+import Newsletter from "./components/Newsletter";
 import { BOOKS as FALLBACK_BOOKS, BOOKS_PAGE_SIZE } from "./data/books";
 import { EVENTS as FALLBACK_EVENTS, EVENTS_PAGE_SIZE } from "./data/events";
 import type { Book, EventItem, InterestForm, RsvpForm } from "./types";
@@ -80,6 +81,11 @@ function App() {
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
   const [rsvpError, setRsvpError] = useState<string | null>(null);
 
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterSubmitting, setNewsletterSubmitting] = useState(false);
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
+
   const openInterestForm = () => {
     setInterestFormOpen(true);
     setInterestSubmitted(false);
@@ -139,6 +145,28 @@ function App() {
     }
   };
 
+  const submitNewsletter = async () => {
+    setNewsletterSubmitting(true);
+    setNewsletterError(null);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setNewsletterError(body?.error || "Something went wrong — please try again.");
+        return;
+      }
+      setNewsletterSubmitted(true);
+    } catch {
+      setNewsletterError("Something went wrong — please try again.");
+    } finally {
+      setNewsletterSubmitting(false);
+    }
+  };
+
   return (
     <div style={{ color: "#1c1b18" }}>
       <Header />
@@ -161,6 +189,14 @@ function App() {
       <Mascots />
       <Board />
       <DonateCta onDonateClick={() => setRedirectNotice(DONATE_NOTICE)} />
+      <Newsletter
+        email={newsletterEmail}
+        submitting={newsletterSubmitting}
+        submitted={newsletterSubmitted}
+        error={newsletterError}
+        onChange={setNewsletterEmail}
+        onSubmit={submitNewsletter}
+      />
       <Footer />
 
       <RedirectNoticeModal notice={redirectNotice} onClose={() => setRedirectNotice(null)} />

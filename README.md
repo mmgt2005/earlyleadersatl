@@ -98,8 +98,10 @@ email fails to send (e.g. before a domain is verified in Resend):
   `RSVPs` log tab (timestamp, event, name, email, guests).
 - **Get Involved** appends a row to a `Get Involved` log tab (timestamp, name, email,
   interest, message).
+- **Newsletter signup** appends a row to a `Newsletter` log tab (timestamp, email) —
+  a backup record alongside the Resend Segment, which is the actual mailing list.
 
-Both log tabs are created automatically the first time they're needed — no need to
+All log tabs are created automatically the first time they're needed — no need to
 add them manually.
 
 **Setup:**
@@ -120,6 +122,9 @@ add them manually.
        const type = String(payload.type || "rsvp");
        if (type === "get-involved") {
          return handleGetInvolved(payload);
+       }
+       if (type === "newsletter") {
+         return handleNewsletter(payload);
        }
        return handleRsvp(payload);
      } catch (err) {
@@ -190,6 +195,20 @@ add them manually.
      return jsonResponse({ ok: true });
    }
 
+   function handleNewsletter(payload) {
+     const email = String(payload.email || "").trim();
+
+     if (!email) {
+       return jsonResponse({ ok: false, error: "Missing email" });
+     }
+
+     const ss = SpreadsheetApp.getActiveSpreadsheet();
+     const logSheet = getOrCreateSheet(ss, "Newsletter", ["Timestamp", "Email"]);
+     logSheet.appendRow([new Date(), email]);
+
+     return jsonResponse({ ok: true });
+   }
+
    function getOrCreateSheet(spreadsheet, name, headerRow) {
      let sheet = spreadsheet.getSheetByName(name);
      if (!sheet) {
@@ -208,7 +227,7 @@ add them manually.
    sidebar → **Script Properties** → **Add script property** → key `RSVP_SECRET`,
    value: a long random string (ask Claude to generate one, or run
    `openssl rand -hex 32` yourself). Save. Skip this if already set up from an earlier
-   version — it's unchanged and now guards both form types.
+   version — it's unchanged and now guards all three form types.
 3. **If you don't have a Web app deployment yet:** click **Deploy → New deployment** →
    gear icon next to "Select type" → **Web app**. Configuration: Execute as **Me**,
    Who has access **Anyone**. Click **Deploy**, then copy the URL (ends in `/exec`).
@@ -220,14 +239,33 @@ add them manually.
 4. In Vercel, set `GOOGLE_APPS_SCRIPT_RSVP_URL` to that URL, and `SHEET_RSVP_SECRET`
    to the *same* random value used for `RSVP_SECRET` in step 2 — these must match
    exactly, or every request will be rejected as unauthorized. Skip if already set;
-   these two vars now serve both `/api/rsvp` and `/api/get-involved` despite the
-   "RSVP" naming.
+   these two vars now serve `/api/rsvp`, `/api/get-involved`, and `/api/subscribe`
+   despite the "RSVP" naming.
 
-If either env var is missing, both endpoints silently skip the sheet update (the
-email notification still sends normally) rather than failing the visitor's
-submission — check the Vercel function logs for `"Failed to record RSVP in sheet"` /
-`"Failed to record Get Involved submission in sheet"` if rows aren't appearing as
-expected.
+If either env var is missing, all three endpoints silently skip the sheet update
+(the confirmation email / subscribe call still goes through normally) rather than
+failing the visitor's submission — check the Vercel function logs for
+`"Failed to record RSVP in sheet"` / `"Failed to record Get Involved submission in
+sheet"` / `"Failed to record newsletter signup in sheet"` if rows aren't appearing
+as expected.
+
+## Email list signup (Resend Segments)
+
+The "Join Our Email List" section (`Newsletter.tsx`, between the Donate CTA and the
+footer) POSTs to `/api/subscribe`, which adds the email as a contact to a Resend
+Segment — Resend's current name for what used to be called "Audiences"
+(`resend.contacts.create({ email, segments: [{ id }] })`; the SDK's older
+`audienceId`-based API is deprecated). This is the actual mailing list — send
+newsletters to it from the Resend dashboard whenever you want. The sheet's
+`Newsletter` tab (above) is just a backup record, not the list itself.
+
+**Setup:**
+1. In the Resend dashboard, create a Segment (Audiences/Segments section) and copy
+   its ID.
+2. Set `RESEND_SEGMENT_ID` in Vercel to that ID.
+
+No Apps Script redeploy needed beyond the one already covered above (`doPost`
+already dispatches `type: "newsletter"` once you've added `handleNewsletter`).
 
 ## External checkout/donate links
 
