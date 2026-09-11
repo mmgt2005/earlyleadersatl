@@ -61,7 +61,16 @@ short sentences; it isn't shown anywhere else on the page.
 Column headers are matched case-insensitively and ignoring spaces, so exact
 capitalization doesn't matter. `Date` accepts anything `new Date()` can parse (ISO
 `2026-09-14` or `9/14/2026` both work); the site derives the day/month badge from it.
-Row order in the sheet is the display order.
+Row order in the sheet is the display order (among events not yet filtered out —
+see below).
+
+**Past events are hidden automatically** — once an event's `Date` is before today
+(compared by calendar date, not exact time, so an event still shows through the end
+of its own day), it stops appearing in the Upcoming Events section and can't be
+RSVP'd to, without needing to delete the row. You can leave old rows in the sheet as
+a historical record, or delete them — either is fine, since old rows are just never
+shown. An event with a `Date` that fails to parse is shown regardless (fails safe,
+rather than silently hiding an event over a sheet typo).
 
 ## Form emails (Resend)
 

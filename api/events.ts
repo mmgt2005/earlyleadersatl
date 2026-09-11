@@ -4,14 +4,14 @@ import { fetchSheetRows, normalizeKey } from "./_lib/sheets";
 
 const EVENTS_GID = process.env.GOOGLE_SHEET_EVENTS_GID ?? "0";
 
-function parseDateParts(dateStr: string): { day: string; month: string } {
+function parseDateParts(dateStr: string): { day: string; month: string; date: string | null } {
   const parsed = new Date(dateStr);
   if (Number.isNaN(parsed.getTime())) {
-    return { day: dateStr, month: "" };
+    return { day: dateStr, month: "", date: null };
   }
   const day = String(parsed.getUTCDate()).padStart(2, "0");
   const month = parsed.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
-  return { day, month };
+  return { day, month, date: parsed.toISOString() };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -34,12 +34,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const dateRaw = normalized["date"];
         if (!title || !dateRaw) return null;
 
-        const { day, month } = parseDateParts(dateRaw);
+        const { day, month, date } = parseDateParts(dateRaw);
 
         return {
           title,
           day,
           month,
+          date,
           blurb: normalized["blurb"] ?? "",
           when: normalized["when"] ?? "",
           capacity: Number(normalized["capacity"]) || 0,

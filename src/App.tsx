@@ -39,6 +39,17 @@ const CHECKOUT_NOTICE: RedirectNotice = {
     "We opened Bookbag Books checkout in a new tab. Feel free to close it and come back here anytime.",
 };
 
+// Compares calendar dates only (not full timestamps), so an event happening
+// today still shows regardless of the visitor's timezone offset from UTC —
+// and an event with a missing/unparseable date is kept rather than hidden,
+// since we can't tell whether it's actually passed.
+function isUpcoming(event: EventItem): boolean {
+  if (!event.date) return true;
+  const eventDateOnly = event.date.slice(0, 10);
+  const todayDateOnly = new Date().toISOString().slice(0, 10);
+  return eventDateOnly >= todayDateOnly;
+}
+
 function App() {
   const [books, setBooks] = useState<Book[]>(FALLBACK_BOOKS);
   const [events, setEvents] = useState<EventItem[]>(FALLBACK_EVENTS);
@@ -62,6 +73,8 @@ function App() {
         // keep the bundled fallback events
       });
   }, []);
+
+  const upcomingEvents = events.filter(isUpcoming);
 
   const [lightboxBook, setLightboxBook] = useState<Book | null>(null);
   const [visibleBookCount, setVisibleBookCount] = useState(BOOKS_PAGE_SIZE);
@@ -94,7 +107,7 @@ function App() {
   };
 
   const handleRsvp = (index: number) => {
-    const event = events[index];
+    const event = upcomingEvents[index];
     if (event && event.capacity - event.registered <= 0) return;
     setRsvpEventIndex(index);
     setRsvpForm(EMPTY_RSVP_FORM);
@@ -120,7 +133,7 @@ function App() {
     }
   };
 
-  const rsvpEvent = rsvpEventIndex !== null ? (events[rsvpEventIndex] ?? null) : null;
+  const rsvpEvent = rsvpEventIndex !== null ? (upcomingEvents[rsvpEventIndex] ?? null) : null;
 
   const submitRsvpForm = async () => {
     if (!rsvpEvent) return;
@@ -181,8 +194,8 @@ function App() {
       />
       <Programs />
       <Events
-        events={events.slice(0, visibleEventCount)}
-        hasMore={visibleEventCount < events.length}
+        events={upcomingEvents.slice(0, visibleEventCount)}
+        hasMore={visibleEventCount < upcomingEvents.length}
         onShowMore={() => setVisibleEventCount((n) => n + EVENTS_PAGE_SIZE)}
         onRsvp={handleRsvp}
       />
