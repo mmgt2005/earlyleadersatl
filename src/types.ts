@@ -13,6 +13,7 @@ export interface EventItem {
   when: string;
   capacity: number;
   registered: number;
+  date: string | null;
 }
 
 export interface InterestForm {
