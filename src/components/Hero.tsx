@@ -85,14 +85,12 @@ export default function Hero({ onDonateClick }: HeroProps) {
             </div>
           </h1>
           <p
-            className="hero-copy"
             style={{
               fontSize: 13.5,
               lineHeight: 1.6,
               color: "#e7e6f5",
               maxWidth: 420,
               margin: "0 auto 18px",
-              display: "none",
             }}
           >
             Early Leaders ATL connects families with educational tools, enriching

@@ -20,13 +20,3 @@ a:hover {
 img {
   max-width: 100%;
 }
-
-.hero-copy {
-  display: none;
-}
-
-@media (min-width: 640px) {
-  .hero-copy {
-    display: block !important;
-  }
-}
