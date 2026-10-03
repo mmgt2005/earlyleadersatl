@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import Mission from "./components/Mission";
 import ExploreNav from "./components/ExploreNav";
 import Shop from "./components/Shop";
 import Programs from "./components/Programs";
@@ -185,7 +184,6 @@ function App() {
     <div style={{ color: "#1c1b18" }}>
       <Header />
       <Hero onDonateClick={() => setRedirectNotice(DONATE_NOTICE)} />
-      <Mission />
       <ExploreNav onOpenInterestForm={openInterestForm} />
       <Shop
         books={books.slice(0, visibleBookCount)}
