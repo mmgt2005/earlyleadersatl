@@ -4,6 +4,7 @@ import Hero from "./components/Hero";
 import ExploreNav from "./components/ExploreNav";
 import Shop from "./components/Shop";
 import Programs from "./components/Programs";
+import ProgramVideoSection from "./components/ProgramVideoSection";
 import Events from "./components/Events";
 import Mascots from "./components/Mascots";
 import Board from "./components/Board";
@@ -16,7 +17,8 @@ import RedirectNoticeModal, { type RedirectNotice } from "./components/RedirectN
 import Newsletter from "./components/Newsletter";
 import { BOOKS as FALLBACK_BOOKS, BOOKS_PAGE_SIZE } from "./data/books";
 import { EVENTS as FALLBACK_EVENTS, EVENTS_PAGE_SIZE } from "./data/events";
-import type { Book, EventItem, InterestForm, RsvpForm } from "./types";
+import { PROGRAM_VIDEO as FALLBACK_PROGRAM_VIDEO } from "./data/programVideo";
+import type { Book, EventItem, InterestForm, ProgramVideoConfig, RsvpForm } from "./types";
 
 const EMPTY_INTEREST_FORM: InterestForm = {
   name: "",
@@ -53,6 +55,7 @@ function isUpcoming(event: EventItem): boolean {
 function App() {
   const [books, setBooks] = useState<Book[]>(FALLBACK_BOOKS);
   const [events, setEvents] = useState<EventItem[]>(FALLBACK_EVENTS);
+  const [programVideo, setProgramVideo] = useState<ProgramVideoConfig>(FALLBACK_PROGRAM_VIDEO);
 
   useEffect(() => {
     fetch("/api/books")
@@ -71,6 +74,15 @@ function App() {
       })
       .catch(() => {
         // keep the bundled fallback events
+      });
+
+    fetch("/api/program-video")
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("bad status"))))
+      .then((data: ProgramVideoConfig) => {
+        if (data && data.heading) setProgramVideo(data);
+      })
+      .catch(() => {
+        // keep the bundled fallback copy (e.g. sheet tab not configured)
       });
   }, []);
 
@@ -193,6 +205,10 @@ function App() {
         onBuyNowClick={() => setRedirectNotice(CHECKOUT_NOTICE)}
       />
       <Programs />
+      <ProgramVideoSection
+        config={programVideo}
+        onDonateClick={() => setRedirectNotice(DONATE_NOTICE)}
+      />
       <Events
         events={upcomingEvents.slice(0, visibleEventCount)}
         hasMore={visibleEventCount < upcomingEvents.length}

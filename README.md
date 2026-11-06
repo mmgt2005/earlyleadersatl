@@ -19,15 +19,20 @@ npm run preview   # preview the production build
 ## Structure
 
 - `src/components/` — one component per page section (Header, Hero, Shop, Programs,
-  Events, Mascots, Board, DonateCta, Footer) plus the Lightbox / Get Involved / RSVP
-  modals.
-- `src/data/` — bundled sample book/event data, used as a fallback if the Google
-  Sheet is unreachable (and as the data source in local dev, since `/api/*` doesn't
-  run under plain `npm run dev`).
+  ProgramVideoSection, Events, Mascots, Board, DonateCta, Footer) plus the Lightbox /
+  Get Involved / RSVP modals.
+- `src/data/` — bundled sample book/event/program-video data, used as a fallback if
+  the Google Sheet is unreachable (and as the data source in local dev, since
+  `/api/*` doesn't run under plain `npm run dev`).
 - `public/images/` — logo, mascots, and site chrome. Book cover images are hosted
   externally and referenced by URL in the sheet (see below).
+- `public/videos/` — self-hosted site video(s), e.g. `program-video.mp4` shown in the
+  Program Video section. Swapping to a different video file means replacing this file
+  directly (committed to the repo) — unlike books/events, the video binary itself
+  isn't something a sheet cell can hold.
 - `api/` — Vercel serverless functions: `get-involved.ts` / `rsvp.ts` (email forms via
-  Resend), `books.ts` / `events.ts` (read the Google Sheet catalog).
+  Resend), `books.ts` / `events.ts` / `program-video.ts` (read the Google Sheet
+  catalog).
 
 ## Book & event catalog (Google Sheets)
 
@@ -71,6 +76,31 @@ RSVP'd to, without needing to delete the row. You can leave old rows in the shee
 a historical record, or delete them — either is fine, since old rows are just never
 shown. An event with a `Date` that fails to parse is shown regardless (fails safe,
 rather than silently hiding an event over a sheet typo).
+
+## Program video section
+
+The "Program Video" section (between Programs and Events) reads its heading,
+description, and which call-to-action buttons to show from a third tab in the same
+sheet, fetched at runtime by `/api/program-video`. Add `GOOGLE_SHEET_PROGRAM_VIDEO_GID`
+in Vercel pointing at that tab's `gid`. If it's unset, or the sheet is unreachable,
+the site falls back to the bundled copy in `src/data/programVideo.ts`.
+
+**Program Video tab columns:**
+
+| Heading | Description | Show Donate Button | Show Shop Button | Show Newsletter Button |
+|---|---|---|---|---|
+| See Our Programs in Action | Watch how Early Leaders Atl brings books, mentoring, and hands-on learning directly to kids and families. | TRUE | TRUE | TRUE |
+
+The three "Show" columns accept `TRUE`/`FALSE` (or `yes`/`no`) and default to shown
+if left blank. These only control which buttons appear — they always link to the
+same destinations as the matching buttons elsewhere on the site (Donate opens the
+Square donation link, Shop scrolls to the book shop, Newsletter scrolls to the email
+signup).
+
+**The video file itself isn't managed from the sheet.** A spreadsheet cell can hold
+text, but not a video's binary data, so swapping to a different video means
+replacing `public/videos/program-video.mp4` directly in the repo and redeploying —
+there's no self-service upload flow for it.
 
 ## Form emails (Resend)
 
