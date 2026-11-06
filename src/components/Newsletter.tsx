@@ -17,6 +17,7 @@ export default function Newsletter({
 }: NewsletterProps) {
   return (
     <div
+      id="newsletter-section"
       style={{
         background: "#faf9f6",
         padding: "clamp(40px,6vw,56px) clamp(16px,6vw,40px)",

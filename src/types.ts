@@ -28,3 +28,11 @@ export interface RsvpForm {
   email: string;
   guests: string;
 }
+
+export interface ProgramVideoConfig {
+  heading: string;
+  description: string;
+  showDonateButton: boolean;
+  showShopButton: boolean;
+  showNewsletterButton: boolean;
+}
