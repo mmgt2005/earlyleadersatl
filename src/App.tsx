@@ -17,8 +17,8 @@ import RedirectNoticeModal, { type RedirectNotice } from "./components/RedirectN
 import Newsletter from "./components/Newsletter";
 import { BOOKS as FALLBACK_BOOKS, BOOKS_PAGE_SIZE } from "./data/books";
 import { EVENTS as FALLBACK_EVENTS, EVENTS_PAGE_SIZE } from "./data/events";
-import { PROGRAM_VIDEO as FALLBACK_PROGRAM_VIDEO } from "./data/programVideo";
-import type { Book, EventItem, InterestForm, ProgramVideoConfig, RsvpForm } from "./types";
+import { PROGRAM_VIDEOS as FALLBACK_PROGRAM_VIDEOS } from "./data/programVideo";
+import type { Book, EventItem, InterestForm, ProgramVideoItem, RsvpForm } from "./types";
 
 const EMPTY_INTEREST_FORM: InterestForm = {
   name: "",
@@ -55,7 +55,7 @@ function isUpcoming(event: EventItem): boolean {
 function App() {
   const [books, setBooks] = useState<Book[]>(FALLBACK_BOOKS);
   const [events, setEvents] = useState<EventItem[]>(FALLBACK_EVENTS);
-  const [programVideo, setProgramVideo] = useState<ProgramVideoConfig>(FALLBACK_PROGRAM_VIDEO);
+  const [programVideos, setProgramVideos] = useState<ProgramVideoItem[]>(FALLBACK_PROGRAM_VIDEOS);
 
   useEffect(() => {
     fetch("/api/books")
@@ -78,8 +78,8 @@ function App() {
 
     fetch("/api/program-video")
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error("bad status"))))
-      .then((data: ProgramVideoConfig) => {
-        if (data && data.heading) setProgramVideo(data);
+      .then((data: ProgramVideoItem[]) => {
+        if (Array.isArray(data) && data.length > 0) setProgramVideos(data);
       })
       .catch(() => {
         // keep the bundled fallback copy (e.g. sheet tab not configured)
@@ -206,7 +206,7 @@ function App() {
       />
       <Programs />
       <ProgramVideoSection
-        config={programVideo}
+        videos={programVideos}
         onDonateClick={() => setRedirectNotice(DONATE_NOTICE)}
       />
       <Events
