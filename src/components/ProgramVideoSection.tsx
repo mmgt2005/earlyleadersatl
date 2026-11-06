@@ -1,7 +1,7 @@
-import type { ProgramVideoConfig } from "../types";
+import type { ProgramVideoItem } from "../types";
 
 interface ProgramVideoSectionProps {
-  config: ProgramVideoConfig;
+  videos: ProgramVideoItem[];
   onDonateClick: () => void;
 }
 
@@ -14,51 +14,78 @@ const buttonBase: React.CSSProperties = {
   textDecoration: "none",
 };
 
-export default function ProgramVideoSection({ config, onDonateClick }: ProgramVideoSectionProps) {
+export default function ProgramVideoSection({ videos, onDonateClick }: ProgramVideoSectionProps) {
+  if (videos.length === 0) return null;
+
+  // Button visibility is a single shared row below all videos, so it's read
+  // from the first row only — later rows don't need those columns filled in.
+  const { showDonateButton, showShopButton, showNewsletterButton } = videos[0];
+
   return (
     <div style={{ padding: "clamp(48px,7vw,72px) clamp(16px,6vw,40px)", textAlign: "center" }}>
-      <h2
+      <div
         style={{
-          fontFamily: "'Baloo 2',sans-serif",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          color: "#282882",
-          fontSize: 22,
-          margin: "0 0 16px",
-        }}
-      >
-        {config.heading}
-      </h2>
-      {config.description && (
-        <p
-          style={{
-            fontSize: 14,
-            lineHeight: 1.6,
-            color: "#5a5850",
-            maxWidth: 560,
-            margin: "0 auto 28px",
-          }}
-        >
-          {config.description}
-        </p>
-      )}
-      <video
-        controls
-        playsInline
-        preload="metadata"
-        style={{
-          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          gap: 48,
           maxWidth: 720,
-          borderRadius: 16,
-          display: "block",
-          margin: "0 auto 28px",
-          background: "#000",
+          margin: "0 auto",
         }}
       >
-        <source src="/videos/program-video.mp4" type="video/mp4" />
-      </video>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-        {config.showDonateButton && (
+        {videos.map((video, i) => (
+          <div key={i}>
+            <h2
+              style={{
+                fontFamily: "'Baloo 2',sans-serif",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "#282882",
+                fontSize: 22,
+                margin: "0 0 16px",
+              }}
+            >
+              {video.heading}
+            </h2>
+            {video.description && (
+              <p
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  color: "#5a5850",
+                  maxWidth: 560,
+                  margin: "0 auto 28px",
+                }}
+              >
+                {video.description}
+              </p>
+            )}
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              style={{
+                width: "100%",
+                borderRadius: 16,
+                display: "block",
+                margin: "0 auto",
+                background: "#000",
+              }}
+            >
+              <source src={`/videos/${video.videoFilename}`} type="video/mp4" />
+            </video>
+          </div>
+        ))}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          justifyContent: "center",
+          marginTop: 40,
+        }}
+      >
+        {showDonateButton && (
           <a
             href="https://square.link/u/wzRTsGub"
             target="_blank"
@@ -69,7 +96,7 @@ export default function ProgramVideoSection({ config, onDonateClick }: ProgramVi
             Donate Now
           </a>
         )}
-        {config.showShopButton && (
+        {showShopButton && (
           <a
             href="#square-shop"
             style={{ ...buttonBase, border: "2px solid #282882", color: "#282882" }}
@@ -77,7 +104,7 @@ export default function ProgramVideoSection({ config, onDonateClick }: ProgramVi
             Shop the Books
           </a>
         )}
-        {config.showNewsletterButton && (
+        {showNewsletterButton && (
           <a
             href="#newsletter-section"
             style={{ ...buttonBase, border: "2px solid #282882", color: "#282882" }}

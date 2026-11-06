@@ -79,28 +79,34 @@ rather than silently hiding an event over a sheet typo).
 
 ## Program video section
 
-The "Program Video" section (between Programs and Events) reads its heading,
-description, and which call-to-action buttons to show from a third tab in the same
-sheet, fetched at runtime by `/api/program-video`. Add `GOOGLE_SHEET_PROGRAM_VIDEO_GID`
-in Vercel pointing at that tab's `gid`. If it's unset, or the sheet is unreachable,
-the site falls back to the bundled copy in `src/data/programVideo.ts`.
+The "Program Video" section (between Programs and Events) can show one or more
+videos, each with its own heading/description, read from a third tab in the same
+sheet — one row per video — fetched at runtime by `/api/program-video`. Add
+`GOOGLE_SHEET_PROGRAM_VIDEO_GID` in Vercel pointing at that tab's `gid`. If it's
+unset, or the sheet is unreachable, the site falls back to the single bundled video
+in `src/data/programVideo.ts`.
 
 **Program Video tab columns:**
 
-| Heading | Description | Show Donate Button | Show Shop Button | Show Newsletter Button |
-|---|---|---|---|---|
-| See Our Programs in Action | Watch how Early Leaders Atl brings books, mentoring, and hands-on learning directly to kids and families. | TRUE | TRUE | TRUE |
+| Heading | Description | Video Filename | Show Donate Button | Show Shop Button | Show Newsletter Button |
+|---|---|---|---|---|---|
+| See Our Programs in Action | Watch how Early Leaders Atl brings books, mentoring, and hands-on learning directly to kids and families. | program-video.mp4 | TRUE | TRUE | TRUE |
+| Behind the Scenes at a Book Fair | | program-video-2.mp4 | | | |
 
-The three "Show" columns accept `TRUE`/`FALSE` (or `yes`/`no`) and default to shown
-if left blank. These only control which buttons appear — they always link to the
-same destinations as the matching buttons elsewhere on the site (Donate opens the
-Square donation link, Shop scrolls to the book shop, Newsletter scrolls to the email
-signup).
+Add one row per video — `Heading` and `Video Filename` are required for a row to show
+up; `Description` is optional. The three "Show" columns only matter on the **first**
+row: there's a single shared row of Donate/Shop/Newsletter buttons below all the
+videos (not one per video), so only the first row's values are read — leave them
+blank on later rows. They accept `TRUE`/`FALSE` (or `yes`/`no`) and default to shown
+if left blank. The buttons always link to the same destinations as the matching
+buttons elsewhere on the site (Donate opens the Square donation link, Shop scrolls to
+the book shop, Newsletter scrolls to the email signup).
 
-**The video file itself isn't managed from the sheet.** A spreadsheet cell can hold
-text, but not a video's binary data, so swapping to a different video means
-replacing `public/videos/program-video.mp4` directly in the repo and redeploying —
-there's no self-service upload flow for it.
+**The video files themselves aren't managed from the sheet.** A spreadsheet cell can
+hold a filename as text, but not a video's binary data, so adding or swapping a video
+means sending the file to be committed as `public/videos/<filename>` matching
+whatever you put in that row's `Video Filename` column, then redeploying — there's no
+self-service upload flow for the file itself.
 
 ## Form emails (Resend)
 

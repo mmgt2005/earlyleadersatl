@@ -29,9 +29,10 @@ export interface RsvpForm {
   guests: string;
 }
 
-export interface ProgramVideoConfig {
+export interface ProgramVideoItem {
   heading: string;
   description: string;
+  videoFilename: string;
   showDonateButton: boolean;
   showShopButton: boolean;
   showNewsletterButton: boolean;

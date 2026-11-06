@@ -1,10 +1,13 @@
-import type { ProgramVideoConfig } from "../types";
+import type { ProgramVideoItem } from "../types";
 
-export const PROGRAM_VIDEO: ProgramVideoConfig = {
-  heading: "See Our Programs in Action",
-  description:
-    "Watch how Early Leaders Atl brings books, mentoring, and hands-on learning directly to kids and families.",
-  showDonateButton: true,
-  showShopButton: true,
-  showNewsletterButton: true,
-};
+export const PROGRAM_VIDEOS: ProgramVideoItem[] = [
+  {
+    heading: "See Our Programs in Action",
+    description:
+      "Watch how Early Leaders Atl brings books, mentoring, and hands-on learning directly to kids and families.",
+    videoFilename: "program-video.mp4",
+    showDonateButton: true,
+    showShopButton: true,
+    showNewsletterButton: true,
+  },
+];
